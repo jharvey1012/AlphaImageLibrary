@@ -46,7 +46,8 @@ class Image {
         
         switch($typeCode) {
             case 1:
-                // Gif
+                $this->type = "image/gif";
+                $this->img = imagecreatefromgif($this->path);
                 break;
             case 2:
                 // JPEG
@@ -168,6 +169,14 @@ class Image {
                     throw Exception("PNG image handling not enabled in your PHP settings.");
                 }
                 break;
+            case "image/gif":
+                if(imagetypes() & IMG_GIF) {
+                    imagegif($this->newImage, $path); 
+                }
+                else {
+                    throw Exception("GIF image handling not enabled in your PHP settings.");
+                }
+                break;
         }
             if($download)
 	    {
@@ -183,6 +192,6 @@ class Image {
 
 
 // Ignore, for testing purposes. 
-$myImg = new Image('Mushroom2.png');
-$myImg->resizeMaxWidth(300);
-$myImg->saveImage("/new.jpg", 100, true);
+$myImg = new Image('Rotating_Sphere.gif');
+$myImg->resizeMaxWidth(200);
+$myImg->saveImage("/new2.gif", 100, true);
