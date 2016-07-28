@@ -52,10 +52,12 @@ class Image {
                 // JPEG
                 $this->type = "image/jpeg";
                 $this->img = imagecreatefromjpeg($this->path);
-                $this->didOpenSuccessfully($this->img);
+//                $this->didOpenSuccessfully($this->img);
                 break;
             case 3: 
-                // PNG @todo add support for this filetype
+                // PNG 
+                $this->type = "image/png";
+                $this->img = imagecreatefrompng($this->path);
                 break;
             case 4:
                 // SWF @todo add support for this filetype
@@ -105,32 +107,31 @@ class Image {
     }
     
     
-    private function createNewImage($width, $height) {
+    public function createNewImage($width, $height) {
         $this->newImage = imagecreatetruecolor($width, $height);
         imagecopyresampled($this->newImage, $this->img, 0, 0, 0, 0, $this->resizeWidth, $this->resizeHeight, $this->width, $this->height);
     }
     
     
-    private function resizeExact($width, $height) {
-        createNewImage($width, $height);
+    public function resizeExact($width, $height) {
+        $this->createNewImage($width, $height);
     }
     
-    private function resizeMaxHeight($height) {
-        $width = $this->resizeWidthByHeight($height);
-        createNewImage($width, $height);
+    public function resizeMaxHeight($height) {
+        $this->resizeWidth = $this->resizeWidthByHeight($height);
+        $this->resizeHeight = $height;
+        $this->createNewImage($this->resizeWidth, $this->resizeHeight);
     }
     
-    private function resizeMaxWidth($width) {
-        $height = $this->resizeHeightByWidth($width);
-        createNewImage($width, $height);
+    public function resizeMaxWidth($width) {
+        $this->resizeHeight = $this->resizeHeightByWidth($width);
+        $this->resizeWidth = $width;
+        $this->createNewImage($this->resizeWidth, $this->resizeHeight);
     }
 
     private function didOpenSuccessfully($resource) {
         if(!$resource) {
-            echo "We had trouble opening your image file.";
-        }
-        else {
-            echo "Image Opened Succcessfully";
+           throw Exception("Couldn't load the specified image.");
         }
     }
     
@@ -144,11 +145,27 @@ class Image {
        return floor(($this->width / $this->height) * $height); 
     }
     
+    private function setPNGCompression($quality) {
+        return ($quality / 100) * 9;
+    }
+    
     public function saveImage($path, $quality, $download = false) {
         switch($this->type) {
-            case 'image/jpg':
-                if(imagetypes & IMG_JPG) {
+            case 'image/jpeg':
+                if(imagetypes() & IMG_JPG) {
                     imagejpeg($this->newImage, $path, $quality);
+                }
+                else {
+                    throw Exception("JPEG image handling not enabled in your PHP settings.");
+                }
+                break;
+            case "image/png":
+                $compression = $this->setPNGCompression($quality);
+                if(imagetypes() & IMG_PNG) {
+                    imagepng($this->newImage, $path, $compression);
+                }
+                else {
+                    throw Exception("PNG image handling not enabled in your PHP settings.");
                 }
                 break;
         }
@@ -163,4 +180,9 @@ class Image {
     
 }
 
-$myImg = new Image('home.jpg');
+
+
+// Ignore, for testing purposes. 
+$myImg = new Image('Mushroom2.png');
+$myImg->resizeMaxWidth(300);
+$myImg->saveImage("/new.jpg", 100, true);
